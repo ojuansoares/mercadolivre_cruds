@@ -48,7 +48,7 @@ cd mercadolivre_cruds
 
 ```bash
 python -m venv .venv
-source .venv\Scripts\activate
+.venv\Scripts\activate
 ```
 
 3. **Instale as dependências:**
