@@ -78,5 +78,3 @@ MONGO_URI=mongodb://localhost:27017/nome-do-seu-banco
 ```bash
 python app.py
 ```
-
-A API estará disponível em `http://localhost:5000`.
