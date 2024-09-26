@@ -5,8 +5,14 @@ from cruds.compra import realizar_compra, listar_compras
 from cruds.favorito import adicionar_favorito, remover_favorito, listar_favoritos
 from cruds.comentario import adicionar_comentario, remover_comentario, listar_comentarios
 from cruds.login import login, verificar_e_expirar_login, verificar_usuario_logado, logout
+from db.connectionredis import check_redis_connection
+from db.connectionmongo import check_mongodb_connection
 
 def main_menu():
+    check_mongodb_connection()
+    check_redis_connection()
+    print()
+
     key = 0
     while key != 'S' and key != 's':
 

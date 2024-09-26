@@ -1,9 +1,15 @@
 import redis
+import os
+from dotenv import load_dotenv
+
+# Carregar as variáveis do .env
+load_dotenv()
 
 rediscon = redis.Redis(
-  host='redis-10558.c17.us-east-1-4.ec2.redns.redis-cloud.com',
-  port=10558,
-  password='MAa5PK8hWOv0D19ElVN25Rr6bok2axZJ')
+    host=os.getenv('REDIS_HOST'),
+    port=int(os.getenv('REDIS_PORT')),
+    password=os.getenv('REDIS_PASSWORD')
+)
 
 def check_redis_connection():
     try:
