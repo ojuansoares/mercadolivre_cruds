@@ -1,6 +1,7 @@
-from db.connection import db
+from db.connectionmongo import db
 import pprint
 from datetime import datetime
+from cruds.login import verificar_usuario_logado
 
 printer = pprint.PrettyPrinter(indent=2)
 
@@ -42,15 +43,7 @@ def realizar_compra():
     if not verificar_existencia():
         return
 
-    listar_usuarios()
-    while True:
-        cpf_comprador = input("Digite o CPF do comprador: ")
-        comprador = db.usuario.find_one({"cpf": cpf_comprador})
-        if not comprador:
-            print("Usuário não encontrado.")
-            continue
-        else:
-            break
+    comprador = db.usuario.find_one({"email": verificar_usuario_logado()})
 
     listar_produtos()
     while True:
@@ -109,7 +102,7 @@ def realizar_compra():
     }
 
     db.usuario.update_one(
-        {"cpf": cpf_comprador},
+        {"email": verificar_usuario_logado()},
         {"$push": {"compras": compra_usuario}}
     )
 

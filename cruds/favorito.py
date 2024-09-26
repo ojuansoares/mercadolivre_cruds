@@ -1,20 +1,12 @@
-from db.connection import db
-from cruds.compra import listar_usuarios, listar_produtos, verificar_existencia
+from db.connectionmongo import db
+from cruds.compra import listar_produtos, verificar_existencia
+from cruds.login import verificar_usuario_logado
 
 def adicionar_favorito():
     if not verificar_existencia():
             return
-
-    print()
-    listar_usuarios()
-    while True:
-        usuario_cpf = input("CPF do usuário que deseja adicionar um favorito: ")
-        usuario = db.usuario.find_one({"cpf": usuario_cpf})
-        if not usuario:
-            print("Usuário não encontrado.")
-            continue
-        else:
-            break
+    
+    usuario = db.usuario.find_one({"email": verificar_usuario_logado()})
 
     print()
     listar_produtos()
@@ -39,10 +31,8 @@ def adicionar_favorito():
 
 def remover_favorito():
     print()
-    listar_usuarios()
 
-    usuario_cpf = input("CPF do usuário que deseja remover um favorito: ")
-    usuario = db.usuario.find_one({"cpf": usuario_cpf})
+    usuario = db.usuario.find_one({"email": verificar_usuario_logado()})
     if not usuario or not usuario.get("favoritos"):
         print("Usuário não encontrado ou não possui favoritos.")
         return
@@ -64,10 +54,7 @@ def remover_favorito():
 
 def listar_favoritos():
     print()
-    listar_usuarios()
-
-    usuario_cpf = input("CPF do usuário que deseja listar os favoritos: ")
-    usuario = db.usuario.find_one({"cpf": usuario_cpf})
+    usuario = db.usuario.find_one({"email": verificar_usuario_logado()})
     if not usuario or not usuario.get("favoritos"):
         print("Usuário não encontrado ou não possui favoritos.")
         return

@@ -1,7 +1,14 @@
-from db.connection import db
+from db.connectionmongo import db
 import pprint
 
 printer = pprint.PrettyPrinter(indent=2)
+
+def get_user_by_email(email):
+    mycol = db.usuario
+    if mycol.find_one({"email": email}):
+        return mycol.find_one({"email": email})
+    else:
+        return False
 
 def create_usuario():
     mycol = db.usuario
@@ -92,6 +99,7 @@ def read_usuario(cpf):
             print("Usuario não encontrado")
 
 def update_usuario(cpf):
+    from cruds.login import logout
     mycol = db.usuario
 
     usuarios = list(mycol.find())
@@ -166,8 +174,11 @@ def update_usuario(cpf):
     newvalues = { "$set": mydoc }
     mycol.update_one(myquery, newvalues)
     print("Usuário atualizado com sucesso!")
+    logout()
+    
 
 def delete_usuario(cpf):
+    from cruds.login import logout
     mycol = db.usuario
 
     if not cpf:
@@ -202,3 +213,4 @@ def delete_usuario(cpf):
     mycol.delete_one(myquery)
 
     print(f"Usuário {cpf} deletado!")
+    logout()
