@@ -8,6 +8,7 @@ Este é um projeto de **Loja Online** inspirado no **Mercado Livre**, desenvolvi
 - CRUD de Vendedores
 - CRUD de Produtos
 - Compras, Favoritos e Comentários
+- Sistema de Login com Expiração (Redis)
 
 ---
 
@@ -17,6 +18,7 @@ Este é um projeto de **Loja Online** inspirado no **Mercado Livre**, desenvolvi
 - **Flask** (para criação de API)
 - **MongoDB** (banco de dados NoSQL)
 - **PyMongo** (conexão Python com MongoDB)
+- **Redis-py** (conexão Python com Redis)
 
 ---
 
@@ -26,6 +28,7 @@ Antes de começar, você vai precisar ter instalado:
 
 - **Python 3.10+**
 - **MongoDB** (instância local ou remota)
+- **Redis** (instância local ou remota)
 
 ### Instalar Python
 
@@ -48,7 +51,8 @@ cd mercadolivre_cruds
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate
+.venv\Scripts\activate  # No Windows
+source .venv/bin/activate  # No macOS/Linux
 ```
 
 3. **Instale as dependências:**
@@ -63,6 +67,9 @@ Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis de ambient
 
 ```
 MONGO_URI=mongodb://localhost:27017/nome-do-seu-banco
+REDIS_HOST=seu_host_redis
+REDIS_PORT=sua_port_redis
+REDIS_PASSWORD=sua_senha_redis
 ```
 
 > Substitua `localhost:27017` se estiver usando uma instância remota do MongoDB.
@@ -78,3 +85,9 @@ MONGO_URI=mongodb://localhost:27017/nome-do-seu-banco
 ```bash
 python app.py
 ```
+
+## 📝 Notas
+
+1. O login expira após 2 minutos de inatividade.
+   
+2. O Redis é usado para gerenciar a sessão de login e a expiração.
