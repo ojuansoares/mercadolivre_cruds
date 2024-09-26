@@ -4,18 +4,30 @@ from cruds.produto import create_produto, read_produto, update_produto, delete_p
 from cruds.compra import realizar_compra, listar_compras
 from cruds.favorito import adicionar_favorito, remover_favorito, listar_favoritos
 from cruds.comentario import adicionar_comentario, remover_comentario, listar_comentarios
+from cruds.login import login, verificar_e_expirar_login, verificar_usuario_logado, logout
 
 def main_menu():
     key = 0
     while key != 'S' and key != 's':
+
+        while not verificar_e_expirar_login():
+            print("Faça login para continuar.")
+            login_menu()
+            
+            if verificar_usuario_logado():
+                continue
+            if not verificar_usuario_logado():
+                return
+
         print()
         print("1 - Usuário")
         print("2 - Vendedor")
         print("3 - Produto")
-        print("4 - Realizar Compra")
-        print("5 - Visualizar Compras")
-        print("6 - Favoritos")
-        print("7 - Comentarios")
+        print("4 - Compras")
+        print("5 - Favoritos")
+        print("6 - Comentarios")
+        print("7 - Verificar Usuário Logado")
+        print("8 - Fazer Logout")
         key = input("Digite a opção desejada (S para sair): ")
 
         if key == '1':
@@ -25,16 +37,37 @@ def main_menu():
         elif key == '3':
             produto_menu()
         elif key == '4':
-            realizar_compra()
+            compra_menu()
         elif key == '5':
-            listar_compras()
-        elif key == '6':
             menu_favoritos()
-        elif key == '7':
+        elif key == '6':
             menu_comentarios()
+        elif key == '7':
+            print(verificar_usuario_logado())
+        elif key == '8':
+            logout()
+            continue
 
     print("Foi um prazer... :)")
 
+def login_menu():
+    sub = 0
+    while sub != 'S' and sub != 's':
+        print()
+        print("1 - Fazer Login")
+        print("2 - Cadastrar Usuário")
+        sub = input("Digite a opção desejada (S para Sair): ")
+
+        if sub == '1':
+            email = input("E-mail: ")
+            senha = input("Senha: ")
+            login(email, senha)
+        elif sub == '2':
+            create_usuario()
+
+        if verificar_usuario_logado():
+            return
+        
 def usuario_menu():
     sub = 0
     while sub != 'V' and sub != 'v':
@@ -109,6 +142,19 @@ def produto_menu():
             print()
             nome = input("Nome do produto a ser deletado: ")
             delete_produto(nome)
+
+def compra_menu():
+    sub = 0
+    while sub != 'V' and sub != 'v':
+        print()
+        print("1-Realizar Compra")
+        print("2-Listar Compras")
+        sub = input("Digite a opção desejada (V para voltar): ")
+
+        if sub == '1':
+            realizar_compra()
+        elif sub == '2':
+            listar_compras()
 
 def menu_favoritos():
     sub = 0
