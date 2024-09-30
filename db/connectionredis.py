@@ -2,7 +2,6 @@ import redis
 import os
 from dotenv import load_dotenv
 
-# Carregar as variáveis do .env
 load_dotenv()
 
 rediscon = redis.Redis(

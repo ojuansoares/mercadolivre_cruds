@@ -49,11 +49,15 @@ def main_menu():
         elif key == '6':
             menu_comentarios()
         elif key == '7':
-            print(verificar_usuario_logado())
+            print(f"Você está logado como: {verificar_usuario_logado()}")
         elif key == '8':
             logout()
             continue
 
+    if verificar_usuario_logado():
+        print()
+        logout()
+    print()
     print("Foi um prazer... :)")
 
 def login_menu():
@@ -65,6 +69,7 @@ def login_menu():
         sub = input("Digite a opção desejada (S para Sair): ")
 
         if sub == '1':
+            print()
             email = input("E-mail: ")
             senha = input("Senha: ")
             login(email, senha)

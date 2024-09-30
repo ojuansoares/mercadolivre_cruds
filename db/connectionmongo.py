@@ -12,8 +12,7 @@ db = client.mercadolivre
 
 def check_mongodb_connection():
     try:
-        # The ping command is cheap and does not require auth.
         client.admin.command('ping')
         print("Conectado ao MongoDB!")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"Erro ao conectar ao MongoDB: {e}")
