@@ -35,9 +35,20 @@ def listar_compras():
         print("Não existem compras realizadas.")
         return
 
+    print()
     print("Compras realizadas:")
+    print()
     for compra in compras:
-        printer.pprint(compra)
+        print(f"Compra: {compra['_id']}")
+        print(f"Comprador: {compra['comprador']}")
+        print(f"CPF: {compra['cpf']}")
+        print(f"Data da Compra: {compra['data_compra']}")
+        print(f"Quantidade: {compra['quantidade']}")
+        print(f"Valor Total da Venda: {compra['valor_total_venda']}")
+        print("Produtos:")
+        for produto in compra['compra']:
+            print(f"  Produto: {produto['produto']}, Valor Total: {produto['valor_total']}")
+        print("----------------------------")
 
 def realizar_compra():
     if not verificar_existencia():
