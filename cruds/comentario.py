@@ -1,5 +1,5 @@
 from db.connectionmongo import db
-from cruds.compra import listar_usuarios, listar_produtos, verificar_existencia
+from cruds.compra import listar_produtos, verificar_existencia
 from cruds.login import verificar_usuario_logado
 
 def adicionar_comentario():
