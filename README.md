@@ -1,6 +1,6 @@
 # 🛒 Projeto Mercado Livre
 
-Este é um projeto de **Loja Online** inspirado no **Mercado Livre**, desenvolvido em Python com conexão ao MongoDB. O projeto tem funcionalidades de gerenciamento de usuários, vendedores e produtos.
+Este é um projeto de **Loja Online** inspirado no **Mercado Livre**, desenvolvido em Python com conexão ao MongoDB e Redis. O projeto tem funcionalidades de gerenciamento de usuários, vendedores e produtos.
 
 ## 📚 Funcionalidades
 
@@ -9,6 +9,7 @@ Este é um projeto de **Loja Online** inspirado no **Mercado Livre**, desenvolvi
 - CRUD de Produtos
 - Compras, Favoritos e Comentários
 - Sistema de Login com Expiração (Redis)
+- Retirada de Itens do MongoDB para o Redis, manipulação no Redis, e retorno ao MongoDB
 
 ---
 
