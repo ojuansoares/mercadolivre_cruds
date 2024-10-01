@@ -74,6 +74,7 @@ def create_usuario():
         "compras": [], "favoritos": [] 
     }
     mycol.insert_one(usuario)
+    print()
     print("Usuário criado com sucesso!")
 
 def read_usuario(cpf):
@@ -84,6 +85,7 @@ def read_usuario(cpf):
 
     usuarios = list(mycol.find())
     if not usuarios:
+        print()
         print("Não existem usuarios cadastrados.")
         return
 
@@ -96,6 +98,7 @@ def read_usuario(cpf):
         if mydoc: 
             printer.pprint(mydoc) 
         else:
+            print()
             print("Usuario não encontrado")
 
 def update_usuario(cpf):
@@ -104,6 +107,7 @@ def update_usuario(cpf):
 
     usuarios = list(mycol.find())
     if not usuarios:
+        print()
         print("Não existem usuarios cadastrados.")
         return
 
@@ -182,15 +186,18 @@ def delete_usuario(cpf):
     mycol = db.usuario
 
     if not cpf:
+        print()
         print("CPF não informado.")
         return
     
     if not mycol.find_one({"cpf": cpf}):
+        print()
         print("Usuário não encontrado.")
         return
     
     usuarios = list(mycol.find())
     if not usuarios:
+        print()
         print("Não existem usuarios cadastrados.")
         return
 
@@ -212,5 +219,6 @@ def delete_usuario(cpf):
 
     mycol.delete_one(myquery)
 
+    print()
     print(f"Usuário {cpf} deletado!")
     logout()

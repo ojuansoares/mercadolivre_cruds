@@ -123,11 +123,13 @@ def delete_vendedor(nome):
     myquery = {"nome": nome}
 
     if not mycol.find_one(myquery):
+        print()
         print("Vendedor não encontrado.")
         return
 
     vendedores = list(mycol.find())
     if not vendedores:
+        print()
         print("Não existem vendedores cadastrados.")
         return
 
@@ -139,4 +141,5 @@ def delete_vendedor(nome):
             print(f"Produto {produto['nome']} deletado!")
 
     mycol.delete_one(myquery)
+    print()
     print(f"Vendedor {nome} deletado!")

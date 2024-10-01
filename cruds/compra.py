@@ -9,9 +9,11 @@ def verificar_existencia():
     usuarios_count = db.usuario.count_documents({})
     produtos_count = db.produto.count_documents({})
     if usuarios_count == 0:
+        print()
         print("Não existem usuários cadastrados.")
         return False
     if produtos_count == 0:
+        print()
         print("Não existem produtos cadastrados.")
         return False
     return True
@@ -32,6 +34,7 @@ def listar_compras():
     compras = db.compra.find()
 
     if not compras:
+        print()
         print("Não existem compras realizadas.")
         return
 

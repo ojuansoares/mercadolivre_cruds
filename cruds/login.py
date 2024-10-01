@@ -30,6 +30,7 @@ def verificar_e_expirar_login():
     usuario_logado = rediscon.keys("user:*")
     
     if not usuario_logado:
+        print()
         print("O login expirou ou não há usuário logado.")
         return False
     else:
@@ -40,4 +41,5 @@ def logout():
     usuario_logado = verificar_usuario_logado()
 
     rediscon.delete(f"user:{usuario_logado}")
+    print()
     print(f"Usuário {usuario_logado} deslogado manualmente.")

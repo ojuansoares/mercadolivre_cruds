@@ -59,7 +59,6 @@ def listar_favoritos():
         print("Usuário não encontrado ou não possui favoritos.")
         return
     
-    print()
     print("Favoritos do usuário:")
     for i, favorito in enumerate(usuario["favoritos"]):
         print(f"{i}: Nome: {favorito['nome']}, Descrição: {favorito['descricao']}, Valor: {favorito['valor']}")

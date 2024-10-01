@@ -8,6 +8,7 @@ def create_produto():
     mycol_vendedores = db.vendedor
 
     if mycol_vendedores.count_documents({}) == 0:
+        print()
         print("Não há vendedores cadastrados. Cadastre um vendedor antes de criar um produto.")
         return
 
@@ -63,6 +64,7 @@ def create_produto():
         "comentarios": []
     }
     mycol.insert_one(produto)
+    print()
     print("Produto criado com sucesso!")
 
 def read_produto(nome=""):
@@ -70,29 +72,42 @@ def read_produto(nome=""):
 
     produtos = list(mycol.find())
     if not produtos:
+        print()
         print("Não existem produtos cadastrados.")
         return
 
     if not nome:
         mydoc = mycol.find().sort("nome")
         for x in mydoc:
-            print ("Nome: ", x["nome"], "|", "Valor: ", x["valor"])
+            print("Nome: ", x["nome"], "|", "Valor: ", x["valor"])
     else:
         mydoc = mycol.find({"nome": nome})
-        for x in mydoc:
-            printer.pprint(x)
+        for produto in mydoc:
+            print()
+            print(f"ID do Produto: {produto['_id']}")
+            print(f"Nome: {produto['nome']}")
+            print(f"Descrição: {produto['descricao']}")
+            print(f"Valor: {produto['valor']}")
+            print(f"ID do Dono: {produto['id_dono']['id_dono']}")
+            print(f"Nome do Dono: {produto['nome_dono']['nome_dono']}")
+            print(f"Email do Dono: {produto['email_dono']['email_dono']}")
+            print("Comentários:")
+            for comentario in produto['comentarios']:
+                print(f"  Comentário: {comentario}")
 
 def update_produto(nome):
     mycol = db.produto
 
     produtos = list(mycol.find())
     if not produtos:
+        print()
         print("Não existem produtos cadastrados.")
         return
 
     myquery = {"nome": nome}
     mydoc = mycol.find_one(myquery)
     if not mydoc:
+        print()
         print("Produto não encontrado!")
         return
 
@@ -125,20 +140,24 @@ def update_produto(nome):
 
     newvalues = {"$set": mydoc}
     mycol.update_one(myquery, newvalues)
+    print()
     print("Produto atualizado com sucesso!")
 
 def delete_produto(nome):
     mycol = db.produto
 
     if not mycol.find_one({"nome": nome}): 
+        print()
         print("Produto não encontrado.")
         return
 
     produtos = list(mycol.find())
     if not produtos:
+        print()
         print("Não existem produtos cadastrados.")
         return
 
     myquery = {"nome": nome}
     mycol.delete_one(myquery)
+    print()
     print(f"Produto {nome} deletado!")

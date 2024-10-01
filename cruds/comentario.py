@@ -43,6 +43,7 @@ def remover_comentario():
     produto_nome = input("Nome do produto que deseja remover um comentário: ")
     produto = db.produto.find_one({"nome": produto_nome})
     if not produto or not produto.get("comentarios"):
+        print()
         print("Produto não encontrado ou não possui comentários.")
         return
 
@@ -68,6 +69,7 @@ def listar_comentarios():
     produto_nome = input("Nome do produto que deseja listar os comentários: ")
     produto = db.produto.find_one({"nome": produto_nome})
     if not produto or not produto.get("comentarios"):
+        print()
         print("Produto não encontrado ou não possui comentários.")
         return
 
