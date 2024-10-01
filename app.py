@@ -5,7 +5,7 @@ from cruds.compra import realizar_compra, listar_compras
 from cruds.favorito import adicionar_favorito, remover_favorito, listar_favoritos
 from cruds.comentario import adicionar_comentario, remover_comentario, listar_comentarios
 from cruds.login import login, verificar_e_expirar_login, verificar_usuario_logado, logout
-from cruds.irm import irm, create_produto_redis
+from cruds.irm import irm, create_produto_redis, adicionar_favorito_redis, remover_favorito_redis, listar_favoritos_redis, sincronizar_favoritos, criar_cache_favoritos, verificar_existencia_cache, deletar_cache_favoritos
 from db.connectionredis import check_redis_connection
 from db.connectionmongo import check_mongodb_connection
 
@@ -34,7 +34,7 @@ def main_menu():
         print("4 - Compras")
         print("5 - Favoritos")
         print("6 - Comentarios")
-        print("7 - Implementação Redis/Mongo")
+        print("7 - Implementação Redis/MongoDB")
         print("8 - Verificar Usuário Logado")
         print("9 - Fazer Logout")
         key = input("Digite a opção desejada (S para sair): ")
@@ -72,12 +72,35 @@ def menu_irm():
         print()
         print("1 - Somar 100 Reais Aos Produtos Atuais")
         print("2 - Adicionar Novo Produto")
+        print("3 - Favoritos (Redis/MongoDB)")
         sub = input("Digite a opção desejada (V para voltar): ")
 
         if sub == '1':
             irm()
         if sub == '2':
             create_produto_redis()
+        if sub == '3':
+            favoritos_redis_menu()
+
+def favoritos_redis_menu():
+    sub = 0
+    while sub != 'V' and sub != 'v':
+        print()
+        print("Opções de Favoritos (Redis/MongoDB):")
+        print("1 - Adicionar Favorito (Redis)")
+        print("2 - Remover Favorito (Redis)")
+        print("3 - Listar Favoritos (Redis)")
+        print("4 - Sincronizar Favoritos (MongoDB)")
+        sub = input("Digite a opção desejada (V para voltar): ")
+        
+        if sub == "1":
+            adicionar_favorito_redis()
+        elif sub == "2":
+            remover_favorito_redis()
+        elif sub == "3":
+            listar_favoritos_redis()
+        elif sub == "4":
+            sincronizar_favoritos()
 
 def login_menu():
     sub = 0
