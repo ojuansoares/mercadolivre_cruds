@@ -5,7 +5,7 @@ from cruds.compra import realizar_compra, listar_compras
 from cruds.favorito import adicionar_favorito, remover_favorito, listar_favoritos
 from cruds.comentario import adicionar_comentario, remover_comentario, listar_comentarios
 from cruds.login import login, verificar_e_expirar_login, verificar_usuario_logado, logout
-from cruds.irm import irm, create_produto_redis, adicionar_favorito_redis, remover_favorito_redis, listar_favoritos_redis, sincronizar_favoritos, criar_cache_favoritos, verificar_existencia_cache, deletar_cache_favoritos
+from cruds.irm import irm, create_produto_redis, adicionar_favorito_redis, remover_favorito_redis, listar_favoritos_redis, sincronizar_favoritos
 from db.connectionredis import check_redis_connection
 from db.connectionmongo import check_mongodb_connection
 
