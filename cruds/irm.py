@@ -1,8 +1,10 @@
 from db.connectionmongo import db
 from db.connectionredis import rediscon
-from cruds.compra import listar_produtos
+from cruds.compra import listar_produtos, verificar_existencia
+from cruds.login import verificar_usuario_logado
 import pprint
 from bson import ObjectId
+import json
 
 printer = pprint.PrettyPrinter(indent=2)
 
@@ -132,7 +134,122 @@ def sincronizar_novo_produto(nome_produto):
 
     rediscon.delete(f"produto:{nome_produto}")
 
+def adicionar_favorito_redis():
+    if not verificar_existencia():
+            return
     
+    usuario = db.usuario.find_one({"email": verificar_usuario_logado()})
+
+    if not verificar_existencia_cache():
+        criar_cache_favoritos()
+
+    print()
+    listar_produtos()
+    while True:
+        produto_nome = input("Nome do produto que deseja favoritar: ")
+        produto = db.produto.find_one({"nome": produto_nome})
+        if not produto:
+            print("Produto não encontrado.")
+            continue
+        else:
+            break
+    
+    favorito = {
+        "nome": produto["nome"],
+        "descricao": produto["descricao"],
+        "valor": produto["valor"]
+    }
+
+    favoritos_str = rediscon.get(f"{usuario['cpf']}")
+    if favoritos_str:
+        favoritos = json.loads(favoritos_str.decode('utf-8'))
+    else:
+        favoritos = []
+
+    favoritos.append(favorito)
+    rediscon.set(f"{usuario['cpf']}", json.dumps(favoritos))
+    print("Favorito adicionado ao cache do Redis com sucesso!")
+
+def remover_favorito_redis():
+    print()
+    usuario = db.usuario.find_one({"email": verificar_usuario_logado()})
+    if not usuario.get("favoritos"):
+        print("Usuário não possui favoritos.")
+        return
+    
+    if not verificar_existencia_cache():
+        criar_cache_favoritos()
+    
+    print("Favoritos do usuário:")
+    favoritos_str = rediscon.get(f"{usuario['cpf']}")
+    favoritos = json.loads(favoritos_str.decode('utf-8'))
+    for i, favorito in enumerate(favoritos):
+        print(f"{i}: Nome: {favorito['nome']}, Descrição: {favorito['descricao']}, Valor: {favorito['valor']}")
+    
+    indice = input("Digite o índice do favorito que deseja remover: ")
+    
+    if indice.isdigit() and int(indice) < len(favoritos):
+        indice = int(indice)
+        favoritos.pop(indice)
+        rediscon.set(f"{usuario['cpf']}", json.dumps(favoritos))
+        print("Favorito removido com sucesso!")
+    else:
+        print("Índice inválido ou nenhum favorito selecionado. Nenhuma alteração feita.")
+
+def listar_favoritos_redis():
+    usuario = db.usuario.find_one({"email": verificar_usuario_logado()})
+    if not usuario.get("favoritos"):
+        print()
+        print("Usuário não possui favoritos.")
+        return
+    
+    if not verificar_existencia_cache():
+        criar_cache_favoritos()
+    
+    print()
+    print("Favoritos do usuário:")
+    favoritos_str = rediscon.get(f"{usuario['cpf']}")
+    favoritos = json.loads(favoritos_str.decode('utf-8'))
+    for i, favorito in enumerate(favoritos):
+        print(f"{i}: Nome: {favorito['nome']}, Descrição: {favorito['descricao']}, Valor: {favorito['valor']}")
+   
+def sincronizar_favoritos():
+    print()
+    if not verificar_existencia_cache():
+        print("Não há o que sincronizar!")
+        return
+
+    usuario = db.usuario.find_one({"email": verificar_usuario_logado()})
+    mycol = db.usuario
+    myquery = {"cpf": usuario['cpf']}
+
+    favoritos_str = rediscon.get(f"{usuario['cpf']}")
+    favoritos = json.loads(favoritos_str.decode('utf-8'))
+    newvalues = { "$set": {"favoritos": favoritos} }
+
+    print("Sincronização Com o MongoDB Realizada com Sucesso!")
+
+    mycol.update_one(myquery, newvalues)
+    deletar_cache_favoritos()
+
+def criar_cache_favoritos():
+    usuario = db.usuario.find_one({"email": verificar_usuario_logado()})
+    favoritos_usuario = usuario["favoritos"]
+    rediscon.set(f"{usuario["cpf"]}", json.dumps(favoritos_usuario))
+    print("Favoritos sincronizados ao redis com sucesso!")
+
+def deletar_cache_favoritos():
+    usuario = db.usuario.find_one({"email": verificar_usuario_logado()})
+    rediscon.delete(f"{usuario["cpf"]}")
+
+def verificar_existencia_cache():
+    usuario = db.usuario.find_one({"email": verificar_usuario_logado()})
+    
+    if rediscon.exists(f"{usuario["cpf"]}"):
+        return True
+    else:
+        return False
+
 def irm():
     if not verificar_existencia_produtos():
         return
