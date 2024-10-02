@@ -8,6 +8,8 @@ import json
 
 printer = pprint.PrettyPrinter(indent=2)
 
+# ----- INÍCIO IMPLEMENTAÇÃO PRODUTO (REDIS/MONGO) -----
+
 def verificar_existencia_produtos():
     produtos_count = db.produto.count_documents({})
     if produtos_count == 0:
@@ -134,6 +136,10 @@ def sincronizar_novo_produto(nome_produto):
 
     rediscon.delete(f"produto:{nome_produto}")
 
+# ----- FIM DA IMPLEMENTAÇÃO PRODUTO (REDIS/MONGO) -----
+
+# ----- INÍCIO IMPLEMENTAÇÃO FAVORITOS (REDIS/MONGO) -----
+
 def adicionar_favorito_redis():
     if not verificar_existencia():
             return
@@ -249,6 +255,10 @@ def verificar_existencia_cache():
         return True
     else:
         return False
+
+# ----- FIM IMPLEMENTAÇÃO FAVORITOS (REDIS/MONGO) -----
+
+# ----- EXECUÇÃO DA IMPLEMENTAÇÃO PRODUTOS (REDIS/MONGO) -----
 
 def irm():
     if not verificar_existencia_produtos():
