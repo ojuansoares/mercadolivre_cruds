@@ -79,9 +79,8 @@ def read_vendedor(nome=""):
                 print(f"Data da Compra: {venda['data_compra']}")
                 print(f"Quantidade: {venda['quantidade']}")
                 print("Itens Comprados:")
-                for item in venda['compra']:
-                    print(f"  Produto: {item['produto']}")
-                    print(f"  Valor Total: {item['valor_total']}")
+                print(f"  Produto: {venda['produto_nome']}")
+                print(f"  Valor Total: {venda['produto_valor']}")
                 print("*************************")
         else:
             print("Nenhuma venda registrada.")

@@ -101,7 +101,7 @@ def read_produto(nome=""):
         else:
             for comentario in produto_unico.comentarios:
                 print("*************************")
-                print(f"Usuario: {comentario['usuario']} | Comentario: {comentario['comentario']}")
+                print(f"Usuario: {comentario['nome']} | Comentario: {comentario['comentario']}")
         print("*************************")
     else:
         print()
