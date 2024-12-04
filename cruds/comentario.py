@@ -1,116 +1,130 @@
-from cruds.compra import listar_produtos, verificar_existencia
-from db.connectioncassandra import session
+from db.connectionneo4j import get_session
+import uuid
 
-def adicionar_comentario():
-    if not verificar_existencia():
-        return
-    
-    session.execute("USE at4;")
-    
-    usuarios = session.execute("SELECT * FROM usuario;").all()
-
-    print()
-    if usuarios:
-        for i, usuario in enumerate(usuarios):
-            print(f"{i}: Nome: {usuario.nome} | CPF: {usuario.cpf}")
-        print()
-        indice = input("Digite o índice do Usuario que deseja adicionar um Comentário: ")
-        if indice.isdigit() and int(indice) < len(usuarios):
-            indice = int(indice)
-        else:
+def list_usuarios():
+    session = get_session()
+    if session:
+        try:
+            result = session.execute_read(
+                lambda tx: list(tx.run("MATCH (u:Usuario) RETURN u"))
+            )
+            usuarios = []
             print()
-            print("Índice inválido.")
-            return
-
-    usuario = usuarios[indice]
-
-    print()
-    listar_produtos()
-    while True:
-        produto_nome = input("Nome do produto que deseja Comentar: ")
-        produto = session.execute("SELECT * FROM produto WHERE nome = %s ALLOW FILTERING;", (produto_nome,)).one()
-
-        if not produto:
+            for record in result:
+                usuario = record["u"]
+                usuarios.append(usuario)
+                print(f"ID: {usuario['id']}, Nome: {usuario['nome']}, Email: {usuario['email']}, CPF: {usuario['cpf']}")
+            return usuarios
+        except Exception as e:
             print()
-            print("Produto não encontrado.")
-            continue
-        
-        else:
-            break
-    
-    print()
-    while True:
-        comentario_texto = input("Digite o comentário: ")
-        if not comentario_texto:
-            print("Comentário não pode ser vazio.")
-            continue
-        else:
-            break
-
-    comentario = {
-        "nome": str(usuario.nome),
-        "comentario": str(comentario_texto)
-    }
-
-    comentarios = produto.comentarios if produto.comentarios is not None else []
-    comentarios.append(comentario)
-
-    session.execute("""
-        UPDATE produto
-        SET comentarios = %s
-        WHERE id = %s
-    """, (comentarios, produto.id))
-    
-    print()
-    print("Comentário adicionado com sucesso!")
-
-def remover_comentario():
-    print()
-    listar_produtos()
-
-    produto_nome = input("Nome do produto que deseja remover um comentário: ")
-    produto = session.execute("SELECT * FROM produto WHERE nome = %s ALLOW FILTERING;", (produto_nome,)).one()
-    if not produto or not produto.comentarios:
-        print()
-        print("Produto não encontrado ou não possui comentários.")
-        return
-
-    print()
-    print("Comentários do produto:")
-    for i, comentario in enumerate(produto.comentarios):
-        print("------------------------")
-        print(f"{i}: Nome: {comentario['nome']}, Comentário: {comentario['comentario']}")
-
-    print()
-    indice = input("Digite o índice do comentário que deseja remover: ")
-
-    if indice.isdigit() and int(indice) < len(produto.comentarios):
-        indice = int(indice)
-        produto.comentarios.pop(indice)
-        session.execute("""
-            UPDATE produto
-            SET comentarios = %s
-            WHERE id = %s
-        """, (produto.comentarios, produto.id))
-        print()
-        print("Comentário removido com sucesso!")
+            print(f"Erro ao listar usuários: {e}")
+        finally:
+            session.close()
     else:
         print()
-        print("Índice inválido ou nenhum comentário selecionado. Nenhuma alteração feita.")
+        print("Failed to create session")
+    return []
 
-def listar_comentarios():
-    print()
-    listar_produtos()
-
-    produto_nome = input("Nome do produto que deseja listar os comentários: ")
-    produto = session.execute("SELECT * FROM produto WHERE nome = %s ALLOW FILTERING;", (produto_nome,)).one()
-    if not produto or not produto.comentarios:
+def list_produtos():
+    session = get_session()
+    if session:
+        try:
+            result = session.execute_read(
+                lambda tx: list(tx.run("MATCH (p:Produto) RETURN p"))
+            )
+            produtos = []
+            print()
+            for record in result:
+                produto = record["p"]
+                produtos.append(produto)
+                print(f"ID: {produto['id']}, Nome: {produto['nome']}, Descrição: {produto['descricao']}, Valor: {produto['valor']}")
+            return produtos
+        except Exception as e:
+            print()
+            print(f"Erro ao listar produtos: {e}")
+        finally:
+            session.close()
+    else:
         print()
-        print("Produto não encontrado ou não possui comentários.")
+        print("Failed to create session")
+    return []
+
+def create_comentario():
+    usuarios = list_usuarios()
+    if not usuarios:
+        print()
+        print("Nenhum usuário encontrado.")
         return
 
     print()
-    print("Comentários do produto:")
-    for comentario in produto.comentarios:
-        print("------------------------")
-        print(f"Nome: {comentario['nome']}, Comentário: {comentario['comentario']}")
+    usuario_cpf = input("Digite o CPF do usuário que deseja adicionar um comentário: ")
+    selected_usuario = next((u for u in usuarios if u["cpf"] == usuario_cpf), None)
+
+    if not selected_usuario:
+        print()
+        print("Usuário não encontrado.")
+        return
+
+    produtos = list_produtos()
+    if not produtos:
+        print()
+        print("Nenhum produto encontrado.")
+        return
+
+    print()
+    produto_nome = input("Digite o Nome do produto que deseja comentar: ")
+    selected_produto = next((p for p in produtos if p["nome"] == produto_nome), None)
+
+    if not selected_produto:
+        print()
+        print("Produto não encontrado.")
+        return
+
+    print()
+    comentario_texto = input("Digite o comentário: ")
+
+    session = get_session()
+    if session:
+        try:
+            result = session.execute_write(
+                lambda tx: tx.run(
+                    "MATCH (u:Usuario {id: $usuario_id}), (p:Produto {id: $produto_id}) "
+                    "CREATE (u)-[:COMENTOU {id: $comentario_id, texto: $texto}]->(p) "
+                    "RETURN p",
+                    usuario_id=selected_usuario["id"], produto_id=selected_produto["id"], comentario_id=str(uuid.uuid4()), texto=comentario_texto
+                ).single()
+            )
+            print()
+            print(f"Comentário adicionado com sucesso: {result}")
+        except Exception as e:
+            print()
+            print(f"Erro ao adicionar comentário: {e}")
+        finally:
+            session.close()
+    else:
+        print()
+        print("Failed to create session")
+
+def read_comentarios(produto_id):
+    session = get_session()
+    if session:
+        try:
+            result = session.execute_read(
+                lambda tx: list(tx.run(
+                    "MATCH (u:Usuario)-[c:COMENTOU]->(p:Produto {id: $produto_id}) RETURN u, c",
+                    produto_id=produto_id
+                ))
+            )
+            print()
+            for record in result:
+                usuario = record["u"]
+                comentario = record["c"]
+                print(f"Comentário: {comentario['texto']}, Usuário: {usuario['nome']}, Email: {usuario['email']}")
+        except Exception as e:
+            print()
+            print(f"Erro ao listar comentários: {e}")
+        finally:
+            session.close()
+    else:
+        print()
+        print("Failed to create session")

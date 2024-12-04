@@ -1,91 +1,90 @@
-from db.connectioncassandra import session
-from uuid import uuid4
+from db.connectionneo4j import get_session
 
-def create_vendedor():
-    session.execute("USE at4;")
-
-    usuarios = session.execute("SELECT * FROM usuario;").all()
-
-    if not usuarios:
-        print()
-        print("Não existem usuarios cadastrados.")
-        return
-
-    print()
-    if usuarios:
-        for i, usuario in enumerate(usuarios):
-            print(f"{i}: Nome: {usuario.nome} | CPF: {usuario.cpf}")
-        
-        print()
-        indice = input("Digite o índice do Usuario que deseja tornar Vendedor: ")
-        if indice.isdigit() and int(indice) < len(usuarios):
-            indice = int(indice)
-        else:
+def list_usuarios():
+    session = get_session()
+    if session:
+        try:
+            result = session.execute_read(
+                lambda tx: list(tx.run("MATCH (u:Usuario) RETURN u"))
+            )
+            usuarios = []
             print()
-            print("Índice inválido.")
-            return
-
-
-    usuario = usuarios[indice]
-
-    verificacao_vendedor = session.execute("SELECT usuario_id FROM vendedor WHERE usuario_id = %s ALLOW FILTERING;", (usuario.id,))
-
-    if verificacao_vendedor:
-        print("Este usuário já é vendedor.")
-        return
-
-    vendas = []
-
-    session.execute(
-        "INSERT INTO vendedor (id, usuario_id, nome, sobrenome, email, vendas) VALUES (%s, %s, %s, %s, %s, %s);",
-        (uuid4(), usuario.id, usuario.nome, usuario.sobrenome, usuario.email, vendas)
-    )
-    print()
-    print(f"Vendedor '{usuario.nome}' criado com sucesso.")
-
-def read_vendedor(nome=""):
-    session.execute("USE at4;")
-
-    vendedores = session.execute("SELECT * FROM vendedor;").all()
-
-    if not vendedores:
-        print()
-        print("Não existem vendedores cadastrados.")
-        return
-    
-    vendedor_encontrado = session.execute("SELECT * FROM vendedor WHERE nome = %s ALLOW FILTERING;", (nome,))
-
-    if nome == '':
-        print("*************************")
-        vendedores = session.execute("SELECT nome, email FROM vendedor;")
-        for vendedor in vendedores:
-            print(f"Nome: {vendedor.nome} | CPF: {vendedor.email}")
-            print("*************************")
-        return
-    elif vendedor_encontrado:
-        vendedor_unico = vendedor_encontrado.one()
-        print("*************************")
-        print(f"ID: {vendedor_unico.id}")
-        print(f"ID do Usuário: {vendedor_unico.usuario_id}")
-        print(f"Nome: {vendedor_unico.nome}")
-        print(f"Sobrenome: {vendedor_unico.sobrenome}")
-        print(f"E-mail: {vendedor_unico.email}")
-        print("*************************")
-        if vendedor_unico.vendas:
-            for venda in vendedor_unico.vendas:
-                print(f"Comprador: {venda['comprador']}")
-                print(f"CPF: {venda['cpf']}")
-                print(f"Valor Total da Venda: {venda['valor_total_venda']}")
-                print(f"Data da Compra: {venda['data_compra']}")
-                print(f"Quantidade: {venda['quantidade']}")
-                print("Itens Comprados:")
-                print(f"  Produto: {venda['produto_nome']}")
-                print(f"  Valor Total: {venda['produto_valor']}")
-                print("*************************")
-        else:
-            print("Nenhuma venda registrada.")
-        return
+            for record in result:
+                usuario = record["u"]
+                usuarios.append(usuario)
+                print(f"Nome: {usuario['nome']}, Email: {usuario['email']}, CPF: {usuario['cpf']}")
+            return usuarios
+        except Exception as e:
+            print()
+            print(f"Erro ao listar usuários: {e}")
+        finally:
+            session.close()
     else:
         print()
-        print("Vendedor não encontrado.")
+        print("Failed to create session")
+    return []
+
+def create_vendedor():
+    usuarios = list_usuarios()
+    if not usuarios:
+        print()
+        print("Nenhum usuário encontrado.")
         return
+
+    print()
+    usuario_cpf = input("Digite o CPF do usuário que deseja tornar vendedor: ")
+    selected_usuario = next((u for u in usuarios if u["cpf"] == usuario_cpf), None)
+
+    if not selected_usuario:
+        print()
+        print("Usuário não encontrado.")
+        return
+
+    session = get_session()
+    if session:
+        try:
+            result = session.execute_write(
+                lambda tx: tx.run(
+                    "MATCH (u:Usuario {id: $id}) "
+                    "CREATE (u)-[:VENDEDOR]->(v:Vendedor {id: $id, nome: $nome, email: $email, cpf: $cpf}) "
+                    "RETURN v",
+                    id=selected_usuario["id"], nome=selected_usuario["nome"], email=selected_usuario["email"], cpf=selected_usuario["cpf"]
+                ).single()
+            )
+            print()
+            print(f"Usuário {selected_usuario['nome']} agora é um vendedor: {result}")
+        except Exception as e:
+            print()
+            print(f"Erro ao criar vendedor: {e}")
+        finally:
+            session.close()
+    else:
+        print()
+        print("Failed to create session")
+
+def read_vendedor(nome_vendedor):
+    session = get_session()
+    if session:
+        try:
+            if nome_vendedor:
+                query = "MATCH (u:Usuario)-[:VENDEDOR]->(v:Vendedor {nome: $nome}) RETURN u, v"
+                parameters = {"nome": nome_vendedor}
+            else:
+                query = "MATCH (u:Usuario)-[:VENDEDOR]->(v:Vendedor) RETURN u, v"
+                parameters = {}
+
+            result = session.execute_read(
+                lambda tx: list(tx.run(query, parameters))
+            )
+            print()
+            for record in result:
+                vendedor = record["v"]
+                print(f"Vendedor: {vendedor['nome']}, Email: {vendedor['email']}, CPF: {vendedor['cpf']}")
+        except Exception as e:
+            print()
+            print(f"Erro ao listar vendedores: {e}")
+        finally:
+            session.close()
+    else:
+        print()
+        print("Failed to create session")

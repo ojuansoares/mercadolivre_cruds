@@ -1,144 +1,125 @@
-from cruds.compra import listar_produtos, verificar_existencia
-from db.connectioncassandra import session
+from db.connectionneo4j import get_session
 
-def adicionar_favorito():
-    if not verificar_existencia():
-            return
-    
-    usuarios = session.execute("SELECT * FROM usuario;").all()
-
-    print()
-    if usuarios:
-        for i, usuario in enumerate(usuarios):
-            print(f"{i}: Nome: {usuario.nome} | CPF: {usuario.cpf}")
-        print()
-        indice = input("Digite o índice do Usuario que deseja adicionar um Favorito: ")
-        if indice.isdigit() and int(indice) < len(usuarios):
-            indice = int(indice)
-        else:
+def list_usuarios():
+    session = get_session()
+    if session:
+        try:
+            result = session.execute_read(
+                lambda tx: list(tx.run("MATCH (u:Usuario) RETURN u"))
+            )
+            usuarios = []
             print()
-            print("Índice inválido.")
-            return
+            for record in result:
+                usuario = record["u"]
+                usuarios.append(usuario)
+                print(f"ID: {usuario['id']}, Nome: {usuario['nome']}, Email: {usuario['email']}, CPF: {usuario['cpf']}")
+            return usuarios
+        except Exception as e:
+            print()
+            print(f"Erro ao listar usuários: {e}")
+        finally:
+            session.close()
+    else:
+        print()
+        print("Failed to create session")
+    return []
 
-    usuario = usuarios[indice]
-    usuario_id = usuario.id
+def list_produtos():
+    session = get_session()
+    if session:
+        try:
+            result = session.execute_read(
+                lambda tx: list(tx.run("MATCH (p:Produto) RETURN p"))
+            )
+            produtos = []
+            print()
+            for record in result:
+                produto = record["p"]
+                produtos.append(produto)
+                print(f"ID: {produto['id']}, Nome: {produto['nome']}, Descrição: {produto['descricao']}, Valor: {produto['valor']}")
+            return produtos
+        except Exception as e:
+            print()
+            print(f"Erro ao listar produtos: {e}")
+        finally:
+            session.close()
+    else:
+        print()
+        print("Failed to create session")
+    return []
 
-    listar_produtos()
-    while True:
-        produto_nome = input("Nome do produto que deseja favoritar: ")
-        produto = session.execute("SELECT * FROM produto WHERE nome = %s ALLOW FILTERING;", (produto_nome,)).one()
-        if usuario.favoritos:
-            for favorito in usuario.favoritos:
-                if favorito["nome"] == produto_nome:
-                    print()
-                    print("Produto já favoritado.")
-                    return
-        if not produto:
-            print("Produto não encontrado.")
-            continue
-        
-        else:
-            break
-    
-    favorito = {
-        "nome": produto.nome,
-        "descricao": produto.descricao,
-        "valor": str(produto.valor)
-    }
-
-    usuario_favorito = usuario.favoritos if usuario.favoritos is not None else []
-    usuario_favorito.append(favorito)
-
-    session.execute("""
-        UPDATE usuario
-        SET favoritos = %s
-        WHERE id = %s
-    """, (usuario_favorito, usuario_id))
-
-    print("Produto adicionado aos favoritos com sucesso!")
-
-def remover_favorito():
-    print()
-    session.execute("USE at4;")
-
-    usuarios = session.execute("SELECT * FROM usuario;").all()
-
+def create_favorito():
+    usuarios = list_usuarios()
     if not usuarios:
         print()
-        print("Não existem usuários cadastrados.")
+        print("Nenhum usuário encontrado.")
         return
     
-    usuarios = session.execute("SELECT nome, cpf FROM usuario;")
-    for usuario in usuarios:
-        print(f"Nome: {usuario.nome} | CPF: {usuario.cpf}")
-        print("*************************")
-    
     print()
-    cpf = input("Digite o CPF do usuário que deseja remover um favorito: ")
-    if cpf:
-        usuario = session.execute("SELECT * FROM usuario WHERE cpf = %s ALLOW FILTERING;", (cpf,)).one()
-        if not usuario:
-            print("Usuário não encontrado.")
-            return
-        else:
-            print()
-            print("Favoritos do usuário:")
-            if usuario.favoritos:
-                for i, favorito in enumerate(usuario.favoritos):
-                    print("------------------------")
-                    print(f"{i}: Nome: {favorito['nome']}, Descrição: {favorito['descricao']}, Valor: {favorito['valor']}")
-                
-                print()
-                indice = input("Digite o índice do favorito que deseja remover: ")
-                
-                if indice.isdigit() and int(indice) < len(usuario.favoritos):
-                    indice = int(indice)
-                    usuario.favoritos.pop(indice)
-                    session.execute("""
-                        UPDATE usuario
-                        SET favoritos = %s
-                        WHERE id = %s
-                    """, (usuario.favoritos, usuario.id))
-                    print()
-                    print("Favorito removido com sucesso!")
-                else:
-                    print()
-                    print("Índice inválido ou nenhum favorito selecionado. Nenhuma alteração feita.")
-            else:
-                print()
-                print("Nenhum favorito registrado.")
+    usuario_cpf = input("Digite o CPF do usuário que deseja adicionar um favorito: ")
+    selected_usuario = next((u for u in usuarios if u["cpf"] == usuario_cpf), None)
 
-def listar_favoritos():
-    print()
-    session.execute("USE at4;")
-
-    usuarios = session.execute("SELECT * FROM usuario;").all()
-
-    if not usuarios:
+    if not selected_usuario:
         print()
-        print("Não existem usuários cadastrados.")
+        print("Usuário não encontrado.")
         return
-    
-    usuarios = session.execute("SELECT nome, cpf FROM usuario;")
-    for usuario in usuarios:
-        print(f"Nome: {usuario.nome} | CPF: {usuario.cpf}")
-        print("*************************")
-    
-    cpf = input("Digite o CPF do usuário que deseja ver os favoritos: ")
-    if cpf:
-        usuario = session.execute("SELECT * FROM usuario WHERE cpf = %s ALLOW FILTERING;", (cpf,)).one()
-        if not usuario:
-            print("Usuário não encontrado.")
-            return
-        else:
+
+    produtos = list_produtos()
+    if not produtos:
+        print()
+        print("Nenhum produto encontrado.")
+        return
+
+    print()
+    produto_nome = input("Digite o Nome do produto que deseja favoritar: ")
+    selected_produto = next((p for p in produtos if p["nome"] == produto_nome), None)
+
+    if not selected_produto:
+        print()
+        print("Produto não encontrado.")
+        return
+
+    session = get_session()
+    if session:
+        try:
+            result = session.execute_write(
+                lambda tx: tx.run(
+                    "MATCH (u:Usuario {id: $usuario_id}), (p:Produto {id: $produto_id}) "
+                    "CREATE (u)-[:FAVORITOU]->(p) "
+                    "RETURN p",
+                    usuario_id=selected_usuario["id"], produto_id=selected_produto["id"]
+                ).single()
+            )
             print()
-            print(f"Favoritos:")
-            if usuario.favoritos:
-                for favorito in usuario.favoritos:
-                    print("------------------------")
-                    print(f"Produto: {favorito['nome']}")
-                    print(f"Descrição: {favorito['descricao']}")
-                    print(f"Valor: {favorito['valor']}")
-            else:
-                print("------------------------")
-                print("Nenhum favorito registrado.")
+            print(f"Produto favoritado com sucesso: {result}")
+        except Exception as e:
+            print()
+            print(f"Erro ao adicionar favorito: {e}")
+        finally:
+            session.close()
+    else:
+        print()
+        print("Failed to create session")
+
+def read_favoritos(usuario_id):
+    session = get_session()
+    if session:
+        try:
+            result = session.execute_read(
+                lambda tx: list(tx.run(
+                    "MATCH (u:Usuario {id: $usuario_id})-[:FAVORITOU]->(p:Produto) RETURN p",
+                    usuario_id=usuario_id
+                ))
+            )
+            print()
+            for record in result:
+                produto = record["p"]
+                print(f"Produto Favoritado: {produto['nome']}, Descrição: {produto['descricao']}, Valor: {produto['valor']}")
+        except Exception as e:
+            print()
+            print(f"Erro ao listar favoritos: {e}")
+        finally:
+            session.close()
+    else:
+        print()
+        print("Failed to create session")

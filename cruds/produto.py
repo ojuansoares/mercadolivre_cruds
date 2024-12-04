@@ -1,108 +1,97 @@
-from db.connectioncassandra import session
-from uuid import uuid4
+from db.connectionneo4j import get_session
+import uuid
 
-def create_produto():
-    session.execute("USE at4;")
-
-    vendedores = session.execute("SELECT * FROM vendedor;").all()
-
-    if not vendedores:
-        print()
-        print("Não existem vendedores cadastrados. Cadastre um vendedor antes de criar um produto.")
-        return
-
-    print()
-    while True:
-        nome = input("Nome do produto: ")
-        if session.execute("SELECT nome FROM produto WHERE nome = %s ALLOW FILTERING;", (nome,)).one():
-            print("Produto com esse nome já existe!")
-            continue
-        elif not nome:
-            print("Nome é um campo obrigatório.")
-        else:
-            break
-
-    while True:
-        descricao = input("Descrição do produto: ")
-        if descricao:
-            break
-        else:
-            print("Descrição é um campo obrigatório.")
-
-    while True:
-        valor = input("Valor do produto: ")
+def list_vendedores():
+    session = get_session()
+    if session:
         try:
-            valor = float(valor)
-            break
-        except ValueError:
-            print("Valor inválido. Digite um número.")
-
-    print()
-    print("Escolha o dono do produto pelo indice:")
-    print("*************************")
-    vendedores_escolha = session.execute("SELECT nome, email FROM vendedor;")
-    for i, vendedor in enumerate(vendedores_escolha):
-        print(f"{i}: Nome: {vendedor.nome} | E-mail: {vendedor.email}")
-        print("*************************")
-    while True:
-        try:
-            indice = int(input("Digite o índice do vendedor: "))
-            if int(indice) >= 0 and int(indice) < len(vendedores):
-                break
-            else:
-                print("Índice inválido. Tente novamente.")
-        except ValueError:
-            print("Entrada inválida. Digite um número.")
-    
-    vendedor = vendedores[indice]
-
-    id_dono = vendedor.id
-    nome_dono = vendedor.nome
-    email_dono = vendedor.email
-
-    comentarios = []
-
-    session.execute("INSERT INTO produto (id, nome, descricao, valor, id_dono, nome_dono, email_dono, comentarios) VALUES (%s, %s, %s, %s, %s, %s, %s, %s);", 
-    (uuid4(), nome, descricao, valor, id_dono, nome_dono, email_dono, comentarios))
-
-    print()
-    print("Produto criado com sucesso!")
-
-def read_produto(nome=""):
-    session.execute("USE at4;")
-
-    produtos = session.execute("SELECT * FROM produto;").all()
-
-    if not produtos:
-        print()
-        print("Não existem produtos cadastrados.")
-        return
-
-    produto_encontrado = session.execute("SELECT * FROM produto WHERE nome = %s ALLOW FILTERING;", (nome,))
-
-    if nome == '':
-        print("*************************")
-        produtos_achados = session.execute("SELECT nome, descricao, valor FROM produto;")
-        for produto in produtos_achados:
-            print(f"Nome: {produto.nome} | Descricao: {produto.descricao} | Valor: {produto.valor}")
-            print("*************************")
-        return
-    elif produto_encontrado:
-        produto_unico = produto_encontrado.one()
-        print("*************************")
-        print(f"ID: {produto_unico.id}")
-        print(f"Nome: {produto_unico.nome}")
-        print(f"Descricao: {produto_unico.descricao}")
-        print(f"Valor: {produto_unico.valor}")
-        print("*************************")
-        print(f"Comentarios:")
-        if produto_unico.comentarios is None or produto_unico.comentarios == []:
-            print("Nenhum comentario.")
-        else:
-            for comentario in produto_unico.comentarios:
-                print("*************************")
-                print(f"Usuario: {comentario['nome']} | Comentario: {comentario['comentario']}")
-        print("*************************")
+            result = session.execute_read(
+                lambda tx: list(tx.run("MATCH (u:Usuario)-[:VENDEDOR]->(v:Vendedor) RETURN u, v"))
+            )
+            vendedores = []
+            print()
+            for record in result:
+                vendedor = record["v"]
+                vendedores.append(vendedor)
+                print(f"Nome: {vendedor['nome']}, Email: {vendedor['email']}, CPF: {vendedor['cpf']}")
+            return vendedores
+        except Exception as e:
+            print()
+            print(f"Erro ao listar vendedores: {e}")
+        finally:
+            session.close()
     else:
         print()
-        print("Produto não encontrado.")
+        print("Failed to create session")
+    return []
+
+def create_produto():
+    print()
+    nome = input("Digite o nome do produto: ")
+    descricao = input("Digite a descrição do produto: ")
+    valor = float(input("Digite o valor do produto: "))
+
+    vendedores = list_vendedores()
+    if not vendedores:
+        print()
+        print("Nenhum vendedor encontrado.")
+        return
+
+    print()
+    vendedor_cpf = input("Digite o CPF do vendedor que deseja associar ao produto: ")
+    selected_vendedor = next((v for v in vendedores if v["cpf"] == vendedor_cpf), None)
+
+    if not selected_vendedor:
+        print()
+        print("Vendedor não encontrado.")
+        return
+
+    session = get_session()
+    if session:
+        try:
+            result = session.execute_write(
+                lambda tx: tx.run(
+                    "MATCH (v:Vendedor {id: $vendedor_id}) "
+                    "CREATE (v)-[:VENDE]->(p:Produto {id: $id, nome: $nome, descricao: $descricao, valor: $valor}) "
+                    "RETURN p",
+                    vendedor_id=selected_vendedor["id"], id=str(uuid.uuid4()), nome=nome, descricao=descricao, valor=valor
+                ).single()
+            )
+            print()
+            print(f"Produto criado com sucesso: {result}")
+        except Exception as e:
+            print()
+            print(f"Erro ao criar produto: {e}")
+        finally:
+            session.close()
+    else:
+        print()
+        print("Failed to create session")
+
+def read_produto(nome_produto):
+    session = get_session()
+    if session:
+        try:
+            if nome_produto:
+                query = "MATCH (v:Vendedor)-[:VENDE]->(p:Produto {nome: $nome}) RETURN v, p"
+                parameters = {"nome": nome_produto}
+            else:
+                query = "MATCH (v:Vendedor)-[:VENDE]->(p:Produto) RETURN v, p"
+                parameters = {}
+
+            result = session.execute_read(
+                lambda tx: list(tx.run(query, parameters))
+            )
+            print()
+            for record in result:
+                vendedor = record["v"]
+                produto = record["p"]
+                print(f"Produto: {produto['nome']}, Descrição: {produto['descricao']}, Valor: {produto['valor']}, Vendedor: {vendedor['nome']}")
+        except Exception as e:
+            print()
+            print(f"Erro ao listar produtos: {e}")
+        finally:
+            session.close()
+    else:
+        print()
+        print("Failed to create session")

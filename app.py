@@ -1,15 +1,14 @@
-from cruds.usuario import create_usuario, read_usuario, update_usuario
+from db.connectionneo4j import check_neo4j_connection
+from cruds.usuario import create_usuario, read_usuario
 from cruds.vendedor import create_vendedor, read_vendedor
 from cruds.produto import create_produto, read_produto
-from cruds.compra import realizar_compra, listar_compras, remover_compra
-from cruds.favorito import adicionar_favorito, remover_favorito, listar_favoritos
-from cruds.comentario import adicionar_comentario, remover_comentario, listar_comentarios
-from db.connectioncassandra import check_cassandradb_connection, start_dbs
+from cruds.compra import create_compra, read_compras
+from cruds.favorito import create_favorito, read_favoritos
+from cruds.comentario import create_comentario, read_comentarios
 
 def main_menu():
-    check_cassandradb_connection()
-
-    start_dbs()
+    print("Iniciando conexção com neo4j...")
+    check_neo4j_connection()
 
     print()
     print("Bem-vindo ao Mercado Livre! :)")
@@ -47,7 +46,6 @@ def usuario_menu():
         print()
         print("1 - Create Usuário")
         print("2 - Read Usuário")
-        print("3 - Update Usuário")
         sub = input("Digite a opção desejada (V para voltar): ")
 
         if sub == '1':
@@ -56,10 +54,6 @@ def usuario_menu():
             print()
             cpf = input("CPF para pesquisa (deixe em branco para listar todos): ")
             read_usuario(cpf)
-        elif sub == '3':
-            print()
-            cpf = input("CPF do usuário a ser atualizado: ")
-            update_usuario(cpf)
 
 def vendedor_menu():
     sub = 0
@@ -97,15 +91,12 @@ def compra_menu():
         print()
         print("1-Realizar Compra")
         print("2-Listar Compras")
-        print("3-Remover Compra")
         sub = input("Digite a opção desejada (V para voltar): ")
 
         if sub == '1':
-            realizar_compra()
+            create_compra()
         elif sub == '2':
-            listar_compras()
-        elif sub == '3':
-            remover_compra()
+            read_compras()
 
 def menu_favoritos():
     sub = 0
@@ -113,16 +104,13 @@ def menu_favoritos():
         print()
         print("Opções de Favoritos:")
         print("1. Adicionar Favorito")
-        print("2. Remover Favorito")
-        print("3. Listar Favoritos")
+        print("2. Listar Favoritos")
         sub = input("Digite a opção desejada (V para voltar): ")
         
         if sub == "1":
-            adicionar_favorito()
+            create_favorito()
         elif sub == "2":
-            remover_favorito()
-        elif sub == "3":
-            listar_favoritos()
+            read_favoritos()
 
 def menu_comentarios():
     sub = 0
@@ -130,16 +118,13 @@ def menu_comentarios():
         print()
         print("Opções de Comentários:")
         print("1. Adicionar Comentário")
-        print("2. Remover Comentário")
-        print("3. Listar Comentários")
+        print("2. Listar Comentários")
         sub = input("Digite a opção desejada (V para voltar): ")
         
         if sub == "1":
-            adicionar_comentario()
+            create_comentario()
         elif sub == "2":
-            remover_comentario()
-        elif sub == "3":
-            listar_comentarios()
+            read_comentarios()
 
 if __name__ == "__main__":
     main_menu()
