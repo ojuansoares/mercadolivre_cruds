@@ -1,24 +1,23 @@
 # 🛒 Projeto Mercado Livre
 
-Este é um projeto de **Loja Online** inspirado no **Mercado Livre**, desenvolvido em Python com conexão ao Cassandra. O projeto tem funcionalidades de gerenciamento de usuários, vendedores, produtos, compras, favoritos e comentários.
+Este é um projeto de **Loja Online** inspirado no **Mercado Livre**, desenvolvido em Python com conexão ao **Neo4j**. O projeto tem funcionalidades de gerenciamento de usuários, vendedores, produtos, compras, favoritos e comentários.
 
 ## 📚 Funcionalidades
 
-- ✅ USUARIO: INSERT, READ, UPDATE
-- ✅ VENDEDOR: INSERT, READ
-- ✅ PRODUTO: INSERT, READ
-- ✅ COMPRA: INSERT, READ, DELETE
-- ✅ FAVORITO: INSERT, READ, DELETE
-- ✅ COMENTARIO: INSERT, READ, DELETE
+- ✅ USUÁRIO: CREATE, READ  
+- ✅ VENDEDOR: CREATE, READ  
+- ✅ PRODUTO: CREATE, READ  
+- ✅ COMPRA: CREATE, READ  
+- ✅ FAVORITO: CREATE, READ  
+- ✅ COMENTÁRIO: CREATE, READ  
 
 ---
 
 ## 🚀 Tecnologias Utilizadas
 
-- **Python** (Versão 3.10+)
-- **Flask** (para criação de API)
-- **Cassandra** (banco de dados NoSQL)
-- **cassandra-driver** (conexão Python com Cassandra)
+- **Python** (Versão 3.10+)  
+- **Neo4j** (banco de dados de grafos)  
+- **neo4j-driver** (conexão Python com Neo4j)  
 
 ---
 
@@ -26,8 +25,8 @@ Este é um projeto de **Loja Online** inspirado no **Mercado Livre**, desenvolvi
 
 Antes de começar, você vai precisar ter instalado:
 
-- **Python 3.10+**
-- **Cassandra** (instância local ou remota)
+- **Python 3.10+**  
+- **Neo4j** (instância local ou remota)  
 
 ### Instalar Python
 
@@ -42,11 +41,11 @@ Siga os passos abaixo para configurar e rodar o projeto em sua máquina local:
 1. **Clone o Repositório:**
 
 ```bash
-git clone https://github.com/ojuansoares/mercadolivre_cruds.git
+git clone https://github.com/ojuansoares/mercadolivre_cruds/neo4j.git
 cd mercadolivre_cruds
 ```
 
-2. **Crie um ambiente virtual:**
+2. Crie um ambiente virtual:
 
 ```bash
 python -m venv .venv
@@ -54,50 +53,32 @@ python -m venv .venv
 source .venv/bin/activate  # No macOS/Linux
 ```
 
-3. **Instale as dependências:**
+3. Instale as dependências:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **Configurar o banco de dados MongoDB:**
+4. Configurar o banco de dados Neo4j:
 
-Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis de ambiente:
+Crie um arquivo .env na raiz do projeto com as seguintes variáveis de ambiente:
 
+```bash
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USER=seu-usuario
+NEO4J_PASSWORD=sua-senha
 ```
-BUNDLE_PATH=/caminho/para/secure-connect-bundle.zip
-PASSWORD_DB=SuaSenhaProBancoDeDadosCassandra
-```
 
-> Substitua /caminho/para/secure-connect-bundle.zip pelo caminho real do seu arquivo de conexão segura.
+> Substitua localhost, seu-usuario e sua-senha pelos valores adequados à sua configuração do Neo4j.
 
 ---
 
-## 🏃‍♂️ Como Rodar o Projeto
+🏃‍♂️ Como Rodar o Projeto
 
-1. Certifique-se de que o Cassandra esteja rodando.
+1. Certifique-se de que o Neo4j esteja rodando.
 
 2. Execute o arquivo principal da aplicação:
 
 ```bash
 python app.py
 ```
-
-## 📝 Notas
-
-
-### Explicação das mudanças:
-
-1. **Atualização das tecnologias utilizadas**:
-   - Removido MongoDB e Redis.
-   - Adicionado Cassandra.
-
-2. **Atualização das funcionalidades**:
-   - Listadas as funcionalidades específicas de CRUD para cada entidade.
-
-3. **Atualização das instruções de configuração**:
-   - Instruções para configurar o Cassandra em vez do MongoDB e Redis.
-   - Adicionado exemplo de configuração do arquivo  para o Cassandra.
-
-4. **Remoção de funcionalidades não mais presentes**:
-   - Removido o sistema de login e a retirada de dados do MongoDB/Redis.
